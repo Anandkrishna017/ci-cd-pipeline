@@ -3,7 +3,7 @@ name: Node.js CI/CD Pipeline
 on:
   push:
     branches:
-      - main  # Adjust branch as needed
+      - main  # Adjust as needed
 
 jobs:
   build:
@@ -15,24 +15,20 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '20'  
+          node-version: '20'
 
       - name: Install dependencies
         run: npm install
-        working-directory: ${{ github.workspace }}
 
-      - name: Build artifacts
+      - name: Create Private Key File
         run: |
-          tar -czf app.tar node_modules package-lock.json
-        working-directory: ${{ github.workspace }}
-        env:
-          AWS_PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY }}  # Store your key in GitHub Secrets
+          echo "${{ secrets.AWS_PRIVATE_KEY }}" > private_key.pem
+          chmod 400 private_key.pem
 
       - name: Deploy to AWS EC2
         run: |
-          chmod 400 $AWS_PRIVATE_KEY
-          scp -i $AWS_PRIVATE_KEY -o StrictHostKeyChecking=no app.tar ubuntu@ec2-3-110-56-31.ap-south-1.compute.amazonaws.com:~
-          ssh -i $AWS_PRIVATE_KEY -o StrictHostKeyChecking=no ubuntu@ec2-3-110-56-31.ap-south-1.compute.amazonaws.com "tar -xzf /home/ubuntu/app.tar -C /home/ubuntu/NodeJS_APP/ && cd /home/ubuntu/NodeJS_APP/ && node app.js > /dev/null 2>&1 &"
-        env:
-          AWS_PRIVATE_KEY: ${{ secrets.AWS_PRIVATE_KEY }}
+          scp -i private_key.pem -o StrictHostKeyChecking=no app.tar ubuntu@ec2-3-110-56-31.ap-south-1.compute.amazonaws.com:~
+          ssh -i private_key.pem -o StrictHostKeyChecking=no ubuntu@ec2-3-110-56-31.ap-south-1.compute.amazonaws.com "tar -xzf /home/ubuntu/app.tar -C /home/ubuntu/NodeJS_APP/ && cd /home/ubuntu/NodeJS_APP/ && node app.js > /dev/null 2>&1 &"
 
+      - name: Cleanup Private Key
+        run: rm -f private_key.pem
