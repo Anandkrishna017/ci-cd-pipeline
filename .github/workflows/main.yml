@@ -3,7 +3,7 @@ name: Node.js CI/CD Pipeline
 on:
   push:
     branches:
-      - main  
+      - main
 
 jobs:
   build:
@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        
+
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
@@ -19,6 +19,12 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Create Deployment Package
+        run: tar -czf app.tar .
+
+      - name: Check if app.tar Exists
+        run: ls -la
 
       - name: Create Private Key File
         run: |
