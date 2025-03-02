@@ -1,0 +1,61 @@
+# ---- Base code 
+
+# build-job:
+#   stage: build
+#   script:
+#     - echo "Hello, This is build "
+
+# test-job:
+#   stage: test
+#   script:
+#     - echo "Hello, This is test "
+
+#-------
+
+image: node:20
+
+stages:
+  # - test_stage
+  - build_stage
+  - deploy_stage
+
+variables:
+  Name: "Hello"
+
+# test-job:
+#   stage: test_stage
+#   script:
+#   - echo "This is local variable $Name"
+#   - echo "This is inbuild variable $CI_JOB_NAME"
+#   - echo "This is env variable $ENV"
+
+
+build-job:
+  stage: build_stage
+  script:
+    # - apt update -y
+    # - apt install npm -y
+    - npm install 
+  artifacts:
+    paths:
+      - node_modules
+      - package-lock.json
+        
+
+deploy-job:
+  stage: deploy_stage
+  script: 
+    # - apt update -y
+    # - apt install nodejs -y
+    - tar -czf app.tar * 
+    - chmod 400 $AWS_PRIVATE_KEY
+    - scp -i $AWS_PRIVATE_KEY -o StrictHostKeyChecking=no app.tar ubuntu@ec2-3-110-56-31.ap-south-1.compute.amazonaws.com:~ 
+    - ssh -i $AWS_PRIVATE_KEY -o StrictHostKeyChecking=no ubuntu@ec2-3-110-56-31.ap-south-1.compute.amazonaws.com  "tar -xzf /home/ubuntu/app.tar -C /home/ubuntu/NodeJS_APP/;cd /home/ubuntu/NodeJS_APP/;node app.js > /dev/null 2>&1 &"
+    
+    # - ssh -i $AWS_PRIVATE_KEY -o StrictHostKeyChecking=no ubuntu@ec2-3-110-56-31.ap-south-1.compute.amazonaws.com \ "tar -xzf /home/ubuntu/app.tar -C /home/ubuntu/NodeJS_APP/ && cd /home/ubuntu/NodeJS_APP/ && node app.js > /dev/null 2>&1 &"
+    # - sudo su
+    # - tar -xzf /home/ubuntu/app.tar -C NodeJS_APP/
+    # - echo "app.tar extracted"
+    # - cd /home/ubuntu/NodeJS_APP/
+    # - node app.js > /dev/null 2>&1 &
+
