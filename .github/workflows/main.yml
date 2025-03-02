@@ -21,7 +21,7 @@ jobs:
         run: npm install
 
       - name: Create Deployment Package
-        run: tar -czf app.tar .
+        run: tar --exclude='./node_modules' --exclude='./app.tar' -czf app.tar .
 
       - name: Check if app.tar Exists
         run: ls -la
